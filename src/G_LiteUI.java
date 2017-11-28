@@ -33,6 +33,9 @@ import javax.swing.GroupLayout.ParallelGroup;
 import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileFilter;
 
 public class G_LiteUI
         extends JFrame
@@ -186,6 +189,24 @@ public class G_LiteUI
         this.jLabel1.setText("Student Name");
         this.studentName.setText(System.getProperty("user.name"));
 
+        this.textDirectory.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                G_LiteUI.this.onTextDirectoryChange();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                G_LiteUI.this.onTextDirectoryChange();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                // G_LiteUI.this.onTextDirectoryChange();
+            }
+        });
+
         GroupLayout jPanel1Layout = new GroupLayout(this.jPanel1);
         this.jPanel1.setLayout(jPanel1Layout);
 
@@ -268,6 +289,27 @@ public class G_LiteUI
         this.jPanel1.getAccessibleContext().setAccessibleName("CS252 UI Assistant (S16)");
 
         pack();
+    }
+
+    private void onTextDirectoryChange() {
+        File f = new File(this.textDirectory.getText());
+        if (!(f.exists() && f.isDirectory())) return;
+        String assRegex = ".*\\.s";
+        String cRegex = ".*\\.c";
+        String myPath;
+        for (File subFile : f.listFiles()) {
+            if (subFile.getName().matches(cRegex)) {
+                this.C_file.setText(subFile.getName());
+                myPath = subFile.getPath();
+                int endIndex = myPath.lastIndexOf("\\");
+                this.workPath = myPath.substring(0, endIndex + 1);
+            } else if (subFile.getName().matches(assRegex)) {
+                this.S_file.setText(subFile.getName());
+                myPath = subFile.getPath();
+                int endIndex = myPath.lastIndexOf("\\");
+                this.workPath = myPath.substring(0, endIndex + 1);
+            }
+        }
     }
 
     public int print(Graphics g, PageFormat pf, int pageIndex) {
@@ -559,7 +601,9 @@ public class G_LiteUI
                 ? userDirectory.substring(1, userDirectory.length() - 1)
                 : userDirectory;
         File dir = new File(userDirectory);
-        if (dir.exists() && dir.isDirectory()) this.fileChooser.setCurrentDirectory(dir);
+        if (dir.exists() && dir.isDirectory()) {
+            this.fileChooser.setCurrentDirectory(dir);
+        }
         int returnVal = this.fileChooser.showOpenDialog(this);
         if (returnVal == 0) {
             File file = this.fileChooser.getSelectedFile();
